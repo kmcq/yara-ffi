@@ -2,6 +2,7 @@ require_relative "yr_meta"
 require_relative "yr_namespace"
 require_relative "yr_string"
 require_relative "yr_rule"
+require_relative "user_data"
 
 module Yara
   # FFI bindings to libyara.
@@ -10,10 +11,10 @@ module Yara
     ffi_lib "libyara"
 
     # int yr_initialize(void)
-    attach_function :yr_initialize, [], :void
+    attach_function :yr_initialize, [], :int
 
     # int yr_finalize(void)
-    attach_function :yr_finalize, [], :void
+    attach_function :yr_finalize, [], :int
 
     # Creates a new compiler and assigns a pointer to that compiler
     # to the pointer passed into the method. To access the complier
@@ -38,14 +39,16 @@ module Yara
     #   int error_level,
     #   const char* file_name,
     #   int line_number,
+    #   const YR_RULE* rule,
     #   const char* message,
     #   void* user_data)
     callback :add_rule_error_callback, [
       :int,       # error_level
-      :string,    # file_name
+      :pointer,   # file_name*
       :int,       # line_number
-      :string,    # message
-      :pointer,   # user_data
+      YrRule.ptr, # YrRule*
+      :pointer,   # message
+      :pointer,   # user_data_pointer
     ], :void
 
     # void yr_compiler_set_callback(
@@ -104,14 +107,13 @@ module Yara
       :int,           # timeout in seconds
     ], :int
 
-    YR_RULE_TYPE =
+    # ADD_RULE_ERROR_CALLBACK = proc do |error_level, file_name, line_number, message, user_data|
+    #   puts error_level, file_name, line_number, message, user_data
+    # end
 
-    ADD_RULE_ERROR_CALLBACK = proc do |error_level, file_name, line_number, message, user_data|
-      puts error_level, file_name, line_number, message, user_data
-    end
-
-    SCAN_CALLBACK = proc do |message, message_data, user_data|
-      puts message, message_data, user_data
-    end
+    # SCAN_CALLBACK = proc do |message, message_data, user_data|
+    #   puts message
+    #   puts message_data
+    # end
   end
 end
